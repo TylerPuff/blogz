@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, session, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -17,6 +17,12 @@ class Blog(db.Model):
     def __init__(self, title, content):
         self.title = title
         self.content = content
+
+    def is_valid(self):
+        if self.title and self.content:
+            return True
+        else:
+            return False
 
 
 
@@ -40,15 +46,24 @@ def new_post():
 
         new_blog = Blog(blog_name, blog_content)
 
-        db.session.add(new_blog)
-        db.session.commit()
+        if new_blog.is_valid():
+            db.session.add(new_blog)
+            db.session.commit()
 
-        url = "/single_template?id=" + str(new_blog.id)
+            url = "/single_template?id=" + str(new_blog.id)
 
-        return redirect(url)
+            return redirect(url)
+
+        else:
+            flash("Posts must contain content and a title. Please try a gain")
+
+            return render_template('new_post.html',
+                                    blog_name=blog_name,
+                                    blog_content=blog_content)
 
 
-    return render_template('new_post.html')
+    else:
+        return render_template('new_post.html')
 
 
 
